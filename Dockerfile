@@ -16,4 +16,5 @@ FROM base
 RUN rpm --import https://packages.vmware.com/tools/keys/VMWARE-PACKAGING-GPG-RSA-KEY.pub
 
 # Add VMware Cloud Director Binary
-ADD ${ARTIFACTORY_URL}/${BINARY} /home --chmod=777
+RUN wget -q -P /home/ ${ARTIFACTORY_URL}/${BINARY} --no-check-certificate && \
+    chmod 777 /home/${BINARY}
