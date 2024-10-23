@@ -1,0 +1,37 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_MESSAGE =~ /See merge request/
+    - when: always
+
+variables:
+  FF_TIMESTAMPS: true
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+
+stages:
+  - build
+
+default:
+  image: docker:27.3.1
+  services:
+    - name: docker:27.3.1-dind
+      command: ["--tls=false"]
+      variables:
+        DOCKER_OPTS: "--insecure-registry=$DOCKERREGISTRY"
+
+before_script:
+  - apk add -q git jq
+
+build:
+  stage: build
+  script:
+    - export VERSION=$(jq -r '.version' VERSION)
+    - export BINARY=$(jq -r '.binary' VERSION)
+    - echo "Building vcd-ci image version $VERSION with VCD binary $BINARY"
+    - docker build . -t vcd-ci:$VERSION --platform=linux/amd64 --build-arg VERSION=$VERSION --build-arg BINARY=$BINARY --build-arg ARTIFACTORY_URL=$ARTIFACTORY_URL
+    - docker tag vcd-ci:$VERSION $DOCKERTARGET:$VERSION
+    - docker tag vcd-ci:$VERSION $DOCKERTARGET:latest
+    - echo $DOCKERPASS | docker login $DOCKERREGISTRY --username $DOCKERUSER --password-stdin
+    - docker push $DOCKERTARGET:$VERSION
+    - docker push $DOCKERTARGET:latest
