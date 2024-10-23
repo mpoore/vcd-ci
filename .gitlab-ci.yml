@@ -1,7 +1,7 @@
 workflow:
   rules:
-    - if: $CI_COMMIT_MESSAGE =~ /See merge request/
-    - when: always
+    - if: $CI_COMMIT_REF_NAME == 'main' && $CI_COMMIT_MESSAGE =~ /See merge request/
+    - when: never
 
 variables:
   FF_TIMESTAMPS: true
