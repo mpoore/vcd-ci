@@ -21,7 +21,7 @@ default:
         DOCKER_OPTS: "--insecure-registry=$DOCKERREGISTRY"
 
 before_script:
-  - apk add -q git 
+  - apk add -q git jq
 
 build:
   stage: build
