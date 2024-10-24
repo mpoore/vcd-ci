@@ -1,4 +1,5 @@
 {
   "version":  "10.6.0.1",
+  "latest":   "true",
   "binary":   "vmware-vcloud-director-distribution-10.6.0-24250702.bin"
 }
