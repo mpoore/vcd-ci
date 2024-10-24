@@ -27,22 +27,19 @@ before_script:
 build:
   stage: build
   script:
+    - export LATEST=$(jq -r '.latest' VERSION)
     - export VERSION=$(jq -r '.version' VERSION)
     - export BINARY=$(jq -r '.binary' VERSION)
     - echo "Building vcd-ci image version $VERSION with VCD binary $BINARY"
     - docker build . -t vcd-ci:$VERSION --platform=linux/amd64 --build-arg VERSION=$VERSION --build-arg BINARY=$BINARY --build-arg ARTIFACTORY_URL=$ARTIFACTORY_URL
-
-push:
-  stage: build
-  script:
-    - export LATEST=$(jq -r '.latest' VERSION)
-    - echo $DOCKERPASS | docker login $DOCKERREGISTRY --username $DOCKERUSER --password-stdin
-    - docker tag vcd-ci:$VERSION $DOCKERTARGET:$VERSION
-    - docker push $DOCKERTARGET:$VERSION
     - |
-      if [ "$LATEST" == "true"]; then
+      if [ $CI_COMMIT_REF_NAME == 'main' ]; then
+        echo $DOCKERPASS | docker login $DOCKERREGISTRY --username $DOCKERUSER --password-stdin
+        docker tag vcd-ci:$VERSION $DOCKERTARGET:$VERSION
+        docker push $DOCKERTARGET:$VERSION
+      fi
+    - |
+      if [ $LATEST == "true" ] && [ $CI_COMMIT_REF_NAME == 'main' ]; then
         docker tag vcd-ci:$VERSION $DOCKERTARGET:latest
         docker push $DOCKERTARGET:latest
       fi
-  rules:
-    - if: $CI_COMMIT_REF_NAME == 'main'
