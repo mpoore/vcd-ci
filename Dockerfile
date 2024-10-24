@@ -4,6 +4,7 @@ ARG BINARY
 ARG ARTIFACTORY_URL
 LABEL maintainer="mpoore.io"
 LABEL version="$VERSION"
+LABEL binary="$BINARY"
 
 # Install packages
 RUN dnf install -y alsa-lib chkconfig coreutils initscripts iproute --allowerasing --setopt=install_weak_deps=False && \

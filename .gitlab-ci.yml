@@ -1,6 +1,7 @@
 workflow:
   rules:
     - if: $CI_COMMIT_REF_NAME == 'main' && $CI_COMMIT_MESSAGE =~ /See merge request/
+    - if: $CI_COMMIT_REF_NAME == 'dev'
     - when: never
 
 variables:
@@ -30,8 +31,18 @@ build:
     - export BINARY=$(jq -r '.binary' VERSION)
     - echo "Building vcd-ci image version $VERSION with VCD binary $BINARY"
     - docker build . -t vcd-ci:$VERSION --platform=linux/amd64 --build-arg VERSION=$VERSION --build-arg BINARY=$BINARY --build-arg ARTIFACTORY_URL=$ARTIFACTORY_URL
-    - docker tag vcd-ci:$VERSION $DOCKERTARGET:$VERSION
-    - docker tag vcd-ci:$VERSION $DOCKERTARGET:latest
+
+push:
+  stage: build
+  script:
+    - export LATEST=$(jq -r '.latest' VERSION)
     - echo $DOCKERPASS | docker login $DOCKERREGISTRY --username $DOCKERUSER --password-stdin
+    - docker tag vcd-ci:$VERSION $DOCKERTARGET:$VERSION
     - docker push $DOCKERTARGET:$VERSION
-    - docker push $DOCKERTARGET:latest
+    - |
+      if [ "$LATEST" == "true"]; then
+        docker tag vcd-ci:$VERSION $DOCKERTARGET:latest
+        docker push $DOCKERTARGET:latest
+      fi
+  rules:
+    - if: $CI_COMMIT_REF_NAME == 'main'
